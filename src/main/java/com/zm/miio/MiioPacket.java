@@ -19,10 +19,11 @@ public class MiioPacket {
     public byte[] magic = BU.short2Bytes((short) 0x2131);
     public short len = 0;
     public byte[] unknown_id_stamp = new byte[12];
-    public byte[] md5sum = BU.hex2Bytes("00000000000000000000000000000000");
+    public byte[] md5sum = new byte[16];
     public String data = "";
     private byte[] encryptedData;
 
+    public byte[] token;
     public byte[] key;
     public byte[] iv;
 
@@ -31,6 +32,7 @@ public class MiioPacket {
 
     public MiioPacket(MiioPacket helloedPacket) {
         unknown_id_stamp = helloedPacket.unknown_id_stamp;
+        this.md5sum = helloedPacket.token;
         this.key = helloedPacket.key;
         this.iv = helloedPacket.iv;
     }
@@ -42,15 +44,14 @@ public class MiioPacket {
     public byte[] encode() {
         encrypt();
         ByteArrayOutputStream ba = new ByteArrayOutputStream();
-        len =(short) (magic.length + 2 + unknown_id_stamp.length + md5sum.length);
+        len =(short) (magic.length + 2 + unknown_id_stamp.length + md5sum.length + encryptedData.length);
+        md5sum();
         try {
             ba.write(magic);
             ba.write(BU.short2Bytes(len));
             ba.write(unknown_id_stamp);
             ba.write(md5sum);
-            //TODO
             ba.write(encryptedData);
-            md5sum();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -67,7 +68,8 @@ public class MiioPacket {
         index += md5sum.length;
 
         if (this.len == 0x20) { // replay from hello
-            initKey(md5sum);// token == md5sum
+            this.token = md5sum;
+            initKey(token);
         } else {
             encryptedData = BU.subByte(packetData, index, packetData.length - 0x20);
             decrypt();
@@ -112,7 +114,7 @@ public class MiioPacket {
             cipher.init(cipher.ENCRYPT_MODE, keySpec, ivSpec);
             encryptedData = cipher.doFinal(data.getBytes());
         }catch (Exception e) {
-            System.out.println("加密失败");
+            e.printStackTrace();
         }
     }
 
@@ -122,9 +124,9 @@ public class MiioPacket {
             SecretKeySpec keySpec = new SecretKeySpec(key, "AES");
             Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5PADDING");
             cipher.init(cipher.DECRYPT_MODE, keySpec, ivSpec);
-            data = new String(cipher.doFinal(encryptedData), "UTF-8");
+            this.data = new String(cipher.doFinal(encryptedData), "UTF-8");
         }catch (Exception e) {
-            System.out.println("解密失败");
+            e.printStackTrace();
         }
     }
 
@@ -141,8 +143,7 @@ public class MiioPacket {
     }
 
     public static void main(String[] args) {
-        MiioPacket mi = new MiioPacket();
-        mi.decode(BU.hex2Bytes("213100200000000000c0c904000479703376c311e8894a4e27ccbb705e132fde"));
-        System.out.println(mi);
+        byte[] data = BU.hex2Bytes("213100500000000000c0c904000479703376c311e8894a4e27ccbb705e132fdef1623747e3fa895b0628c0517e32eed5499b6abc0da40c0b9cc14beecb57478921b03b27e886e6b49fcd0500d45077ee");
+        System.out.println(BU.bytes2Hex(new MiioPacket().MD5(data)));
     }
 }

@@ -7,7 +7,7 @@ import java.net.*;
  * Created by zhangmin on 2017/5/3.
  */
 public class UDPClient {
-    private static final int TIMEOUT = 5000;
+    private static final int TIMEOUT = 1000;
     private static final int MAXNUM = 5;
 
     public static byte[] sendAndRec (String host, int port, byte[] data){
