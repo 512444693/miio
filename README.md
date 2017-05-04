@@ -1,10 +1,9 @@
-# maven_quickstart
+# miio
 
 
-## 更改说明
-- 项目名"maven_quickstart"改为自己的项目名
-- 将pom.xml中带“XXXXXX”标志的改为自己的名字
-- 将目录名按照包名更改正确
-- 将App.java中的包名更改正确
-- 将AppTest.java中的包名更改正确
-- 将.git文件夹删除
+## 使用
+- 开启： java -jar miio-1.0-SNAPSHOT.jar 192.168.1.1 on
+- 关闭： java -jar miio-1.0-SNAPSHOT.jar 192.168.1.1 off
+- 得到参数：java -jar miio-1.0-SNAPSHOT.jar 192.168.1.1 prop
+    
+    会依次打印出电源，温度，湿度和AQI
